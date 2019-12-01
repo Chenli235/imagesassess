@@ -8,15 +8,15 @@ import os
 
 IMAGE_WIDTH = 520
 IMAGE_HEIGHT = 520
+FEATURE_IMAGE = 'image'
 FEATURE_IMAGE_CLASS = "image/class"
 FEATURE_IMAGE_PATH = "image/path" 
 
 _ITEMS_TO_DESCRIPTIONS = {
-        FEATURE_IMAGE = 'A [width x width x 1] grayscale image.',
+        FEATURE_IMAGE : 'A [width x width x 1] grayscale image.',
         FEATURE_IMAGE_CLASS:'A single integer between 0 and [num_classes-1]',
         FEATURE_IMAGE_PATH:'A string indication path to image',
         }
-
 # range of random brightness factors to scale training data.
 _BRIGHTNESS_MIN_FACTOR = 0.2
 _BRIGHTNESS_MAX_FACTOR = 5.0
@@ -40,7 +40,7 @@ def get_num_records(tf_record_path):
         num_records = int(f.read())
         return num_records
 
-def get_split(split_name,tfrecord_file_pattern,num_calsses,image_width,image_height):
+def get_split(split_name,tfrecord_file_pattern,num_classes,image_width,image_height):
     """gets a dataset tuple from tfrecord, to be used with datasetdataprovider
     
     Args:
@@ -53,7 +53,7 @@ def get_split(split_name,tfrecord_file_pattern,num_calsses,image_width,image_hei
     """    
     valid_splits = {'train','test'}
     if split_name not in valid_splits:
-        raise ValueError('split name %s was not recognized.', %split_name)
+        raise ValueError('split name %s was not recognized.' %split_name)
     
     if image_height <= 0 or image_width <= 0:
         raise ValueError('Invalid image_height and/or image_width: %d, %d.' %
@@ -68,12 +68,12 @@ def get_split(split_name,tfrecord_file_pattern,num_calsses,image_width,image_hei
                 tensorflow.FixedLenFEATURE([1],tensorflow.string,default_value='')
                 }
     items_to_handlers={
-            FEATURE_IMAGE:tensorflow.contrib.slim,tfexample_decoder.Tensor(FEATURE_IMAGE),
+            FEATURE_IMAGE:tensorflow.contrib.slim.tfexample_decoder.Tensor(FEATURE_IMAGE),
             FEATURE_IMAGE_CLASS:tensorflow.contrib.slim.tfexample_decoder.Tensor(FEATURE_IMAGE_CLASS),
             FEATURE_IMAGE_PATH:tensorflow.contrib.slim.tfexample_decoder.Tensor(FEATURE_IMAGE_PATH)
                 }
     
-    decoder = tensorflow.contrib.slim.tfexample_decoder.TFExampleDecoder(keys_to_features,item_to_handlers)
+    decoder = tensorflow.contrib.slim.tfexample_decoder.TFExampleDecoder(keys_to_features,items_to_handlers)
     file_pattern=tfrecord_file_pattern % split_name
     num_samples = get_num_records(file_pattern)
     return tensorflow.contrib.slim.dataset.Dataset(
@@ -82,10 +82,11 @@ def get_split(split_name,tfrecord_file_pattern,num_calsses,image_width,image_hei
             decoder=decoder,
             num_samples=num_samples,
             num_classes=num_classes,
-            items_to_descriptions=_ITEMS_TO_DESCRIPTONS)
+            items_to_descriptions=_ITEMS_TO_DESCRIPTIONS)
 
 def get_batches(image,label,image_path,num_threads=800,batch_size=32):
-        """converts images and lables into baatches.
+    
+    """converts images and lables into baatches.
         args:
             image:input image tensor, size [num_images * width*heights*1]
             labels: input lable tensor, size [num_images * 1]
@@ -95,7 +96,7 @@ def get_batches(image,label,image_path,num_threads=800,batch_size=32):
         return:
             batched version of the inputs: images(shape [batch_size*width*width*1],
             labels(shape [batch_size*num_classes]) and image_paths(shape [batch_size * 1])
-        """
+    """
     assert len(image.get_shape().as_list()) == 4
     batch_images,batch_one_hot_labels,batch_image_paths = tensorflow.train.batch(
                 [image,label,image_path],
@@ -103,7 +104,7 @@ def get_batches(image,label,image_path,num_threads=800,batch_size=32):
                 num_threads=num_threads,
                 capacity=5*batch_size,
                 enqueue_many=True)
-    return batch_images,batch_one_hot_labels,batch_images_paths
+    return batch_images,batch_one_hot_labels,batch_image_paths
     
 def get_image_patch_tensor(image, label, image_path, patch_width):
     """Crops a random patch from image.
@@ -122,7 +123,7 @@ def get_image_patch_tensor(image, label, image_path, patch_width):
     patch = tensorflow.expand_dims(tensorflow.random_crop(image, size), 0)
     expanded_label = tensorflow.expand_dims(label, dim=0)
     expanded_image_path = tensorflow.expand_dims(image_path, dim=0)
-    return patch,expanded_image_path,expanded_image_path
+    return patch,expanded_label,expanded_image_path
 
 def apply_random_offset(patch,min_offset,max_offset):
     """Adds a random offset to input image(tensor)."""
@@ -133,12 +134,12 @@ def apply_random_offset(patch,min_offset,max_offset):
 def apply_random_brightness_adjust(patch, min_factor, max_factor):
     """Scales the input image (tensor) brightness by a random factor."""
     # Choose brightness scale uniformly in log space.
-     brightness = tensorflow.pow(
+    brightness = tensorflow.pow(
         tensorflow.constant([10.0]),
         tensorflow.random_uniform([1], numpy.log10(min_factor), numpy.log10(max_factor)))
     return tensorflow.multiply(patch, brightness)
 
-def get_image_tiles_tensor(image, label, image_path, patch_width):
+def get_image_tiles_tensor(image, label, image_path, patch_width):    
     """Gets patches that tile the input image, starting at upper left.
     args:
         image: input image tensor
@@ -168,8 +169,9 @@ def provide_data(tfrecord_file_pattern,
                  patch_width=28,
                  randomize=True,
                  num_threads=64):
-  """Provides batches of data. 
-  Args:
+    
+    """Provides batches of data. 
+      Args:
     tfrecord_file_pattern: String, with formatting for split name. E.g.
       'file_%s.tfrecord'.
     split_name: String indicating split name, typically 'train' or 'test'.
@@ -191,9 +193,10 @@ def provide_data(tfrecord_file_pattern,
     num_samples: The number of images (not tiles) in the dataset.
   Raises:
     ValueError: If the batch size is invalid.
-  """
-    if batch_size<0:
-        raise ValueError('Invalid batch size: %d' % batch_size)
+    """
+    if batch_size <= 0:
+       raise ValueError('Invalid batch size: %d' % batch_size)
+
     dataset_info = get_split(
             split_name,
             tfrecord_file_pattern,
@@ -206,10 +209,10 @@ def provide_data(tfrecord_file_pattern,
             common_queue_min=batch_size,
             shuffle=False,
             num_readers = num_threads)
-   [image, label, image_path] = provider.get(
+    [image, label, image_path] = provider.get(
         [FEATURE_IMAGE, FEATURE_IMAGE_CLASS, FEATURE_IMAGE_PATH])
    
-   if randomize:
+    if randomize:
        # For training, get a single randomly cropped image patch.
         patch_original, label, image_path = get_image_patch_tensor(
             image, label, image_path, patch_width=patch_width)
