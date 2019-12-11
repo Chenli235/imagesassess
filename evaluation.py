@@ -22,6 +22,7 @@ Usage:
 import collections
 import csv
 import os
+import logging
 
 import PIL.Image
 import PIL.ImageDraw
@@ -554,7 +555,7 @@ def get_model_and_metrics(images,
     A ModelAndMetrics object.
   """
     # Define the model:
-    logits = microscopeimagequality.miq.miq_model(
+    logits = miq.miq_model(
         images,
         num_classes=num_classes,
         is_training=is_training,
@@ -612,7 +613,7 @@ def save_inference_results(aggregate_probabilities, aggregate_labels,
                 'max'], certainties['aggregate'], certainties['weighted'],
                 aggregate_labels, *numpy.transpose(aggregate_probabilities).tolist()))
 
-    logging.info('Wrote %g results to %s', len(orig_names), output_file)
+    print('Wrote %g results to %s' %len(orig_names),output_file)
 
 
 def load_inference_results(directory_csvs):
@@ -637,7 +638,7 @@ def load_inference_results(directory_csvs):
             num_entries = sum(1 for _ in csvfile) - 1
             logging.info('%g entries found at %s.', num_entries, path)
             num_entries_total += num_entries
-    logging.info('%g entries total.', num_entries_total)
+    print('%g entries total.' %num_entries_total)
 
     # Read and parse all records.
     aggregate_probabilities = None
@@ -772,6 +773,8 @@ def save_prediction_histogram(predictions, save_path, num_classes, log=False):
     matplotlib.pyplot.xlabel('predicted class')
     matplotlib.pyplot.grid('off')
     matplotlib.pyplot.savefig(save_path, bbox_inches='tight')
+    
+    
 
 
 
