@@ -107,15 +107,16 @@ def predict(imagepath=None,checkpoint=None,output=None,width=None,height=None,pa
             image_height = image_height,
             image_paths = image_paths,
             image_width = image_width,
+            images = images,
             labels = model_metrics.labels,
             model_ckpt_file=checkpoint,
             num_samples = num_samples,
-            nbum_shards=1,
+            num_shards=1,
             output_directory = os.path.join(output,'miq_result_images'),
             patch_width=patch_width,
             probabilities = model_metrics.probabilities,
             shard_num = 1,
-            sholw_plots = visualize
+            show_plots = visualize
             )
         # Delete TFRecord to save disk space.
         tfrecord_path = tfexamples_tfrecord % prediction._SPLIT_NAME
@@ -128,7 +129,7 @@ def predict(imagepath=None,checkpoint=None,output=None,width=None,height=None,pa
 if __name__ == '__main__':
     #download('')
     #validate('tests/data/images_for_glob_test/*.tif')
-    predict(imagepath='tests/data/images_for_glob_test/*.tif',output = 'tests/output/')
+    predict(imagepath='tests/data/images_for_glob_test/00_mcf-z-stacks-03212011_e24_s2_w1241c3e73-1e5a-4121-b7b5-02af37510046.tif',output = 'tests/output/')
     
     
     

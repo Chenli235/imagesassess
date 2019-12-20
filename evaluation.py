@@ -613,7 +613,7 @@ def save_inference_results(aggregate_probabilities, aggregate_labels,
                 'max'], certainties['aggregate'], certainties['weighted'],
                 aggregate_labels, *numpy.transpose(aggregate_probabilities).tolist()))
 
-    print('Wrote %g results to %s' %len(orig_names),output_file)
+    logging.info('Wrote %g results to %s',len(orig_names),output_file)
 
 
 def load_inference_results(directory_csvs):

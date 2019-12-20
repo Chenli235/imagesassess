@@ -63,9 +63,9 @@ def get_split(split_name,tfrecord_file_pattern,num_classes,image_width,image_hei
             FEATURE_IMAGE:
                 tensorflow.FixedLenFeature(image_shape,tensorflow.float32,default_value=tensorflow.zeros(image_shape)),
             FEATURE_IMAGE_CLASS:
-                tensorflow.FixedLenFeatures([num_classes],tensorflow.float32,default_value=tensorflow.zeros([num_classes])),
+                tensorflow.FixedLenFeature([num_classes],tensorflow.float32,default_value=tensorflow.zeros([num_classes])),
             FEATURE_IMAGE_PATH:
-                tensorflow.FixedLenFEATURE([1],tensorflow.string,default_value='')
+                tensorflow.FixedLenFeature([1],tensorflow.string,default_value='')
                 }
     items_to_handlers={
             FEATURE_IMAGE:tensorflow.contrib.slim.tfexample_decoder.Tensor(FEATURE_IMAGE),
