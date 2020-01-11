@@ -390,7 +390,7 @@ def build_tfrecord_from_pngs(image_globs_list, use_unlabeled_data, num_classes,
         image_brightness_scale=image_brightness_scale,
         shard_num=shard_num,
         num_shards=num_shards,
-        normalize=False,
+        normalize=True,
         use_unlabeled_data=use_unlabeled_data
     )
 

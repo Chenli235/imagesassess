@@ -9,7 +9,7 @@ import tensorflow
 
 # Use this backend for producing PNGs without interactive display.
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 
 import constants
 import data_provider
@@ -44,7 +44,7 @@ def validate(imagepath,width=None,height=None,patch_width=84):
     
     if width is None or height is None:
         height,width = dataset_creation.image_size_from_glob(imagepath,patch_width)
-    print(height,width)    
+    logging.info('the image size is %d,%d',height,width)    
     validation.check_image_dimensions(image_paths, height, width)
     
 def predict(imagepath=None,checkpoint=None,output=None,width=None,height=None,patch_width=84,visualize=True):
@@ -56,7 +56,8 @@ def predict(imagepath=None,checkpoint=None,output=None,width=None,height=None,pa
         print('Must provide image globs list.')
     if not os.path.isdir(output):
         os.makedirs(output)
-    images = glob.glob(imagepath)
+    
+    images = dataset_creation.get_images_from_glob(imagepath,max_images=_MAX_IMAGES_TO_VALIDATE)
     
     use_unlabeled_data = True
     # Input images will be cropped to image_height * image_width
@@ -129,8 +130,10 @@ def predict(imagepath=None,checkpoint=None,output=None,width=None,height=None,pa
 if __name__ == '__main__':
     #download('')
     #validate('tests/data/images_for_glob_test/*.tif')
-    predict(imagepath='tests/data/images_for_glob_test/00_mcf-z-stacks-03212011_e24_s2_w1241c3e73-1e5a-4121-b7b5-02af37510046.tif',output = 'tests/output/')
-    
+    # predict images
+    images = dataset_creation.get_images_from_glob('tests/data/test/*.tif',max_images=_MAX_IMAGES_TO_VALIDATE)
+    #predict(imagepath='tests/data/_ChenLi_brain_18-Dec-20191670.tiff',output = 'tests/output/')
+    predict(imagepath='tests/data/test/*.tif',output = 'tests/output/')
     
     
     

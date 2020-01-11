@@ -3,7 +3,7 @@
 import os
 import sys
 import dataset_creation
-
+import logging
 def check_duplicate_image_name(image_paths):
     """
     Check that there are no duplicate names (without path or extension).
@@ -16,9 +16,9 @@ def check_duplicate_image_name(image_paths):
     num_images = len(image_names)
     num_unique = len(set(image_names))
     if num_images != num_unique:
-        print('found %d duplicate images.' %(num_images-num_unique))
+        raise ValueError('Found %d duplicate images.' %(num_images-num_unique))
     else:
-        print('no duplicate images')
+        logging.info('Found no duplicate images in %d images.', num_images)
         
 def check_image_dimensions(image_paths,image_height,image_width):
     """
